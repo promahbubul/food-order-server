@@ -36,6 +36,8 @@ async function run() {
     // Send a ping to confirm a successful connection
     const foodMenu = client.db("foodOrder").collection("foodMenu");
 
+    const userCollection = client.db("foodOrder").collection("user");
+
     app.get("/menu", async (req, res) => {
       const cursor = foodMenu.find();
       const result = await cursor.toArray();
@@ -53,6 +55,66 @@ async function run() {
       const newMenuItem = req.body;
       console.log(newMenuItem);
       const result = await foodMenu.insertOne(newMenuItem);
+      res.send(result);
+    });
+
+    app.put("/menuitem/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updatedFood = req.body;
+      const food = {
+        $set: {
+          name: updatedFood.name,
+          price: updatedFood.price,
+          category: updatedFood.category,
+          rating: updatedFood.rating,
+          photo: updatedFood.photo,
+          description: updatedFood.description,
+        },
+      };
+      const result = await foodMenu.updateOne(filter, food, options);
+      res.send(result);
+    });
+
+    app.delete("/menuitem/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await foodMenu.deleteOne(query);
+      res.send(result);
+    });
+
+    // user related apis
+    app.get("/user", async (req, res) => {
+      const cursor = userCollection.find();
+      const users = await cursor.toArray();
+      res.send(users);
+    });
+
+    app.post("/user", async (req, res) => {
+      const user = req.body;
+      console.log(user);
+      const result = await userCollection.insertOne(user);
+      res.send(result);
+    });
+
+    app.patch("/user", async (req, res) => {
+      const user = req.body;
+      const filter = { email: user.email };
+      const updatedDoc = {
+        $set: {
+          lastSignInTime: user.lastSignInTime,
+        },
+      };
+      const result = await userCollection.updateOne(filter, updatedDoc);
+
+      res.send(result);
+    });
+
+    app.delete("/user/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await userCollection.deleteOne(query);
       res.send(result);
     });
 
